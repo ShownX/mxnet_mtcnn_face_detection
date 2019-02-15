@@ -6,6 +6,7 @@ import csv
 import os
 import numpy as np
 from tqdm import tqdm
+import logging
 from skimage import transform
 import matplotlib.pyplot as plt
 
@@ -16,6 +17,7 @@ parser.add_argument('dir', help='ijba dataset that contains the folder images an
 parser.add_argument('out_dir', help='output dataset')
 parser.add_argument('--enlarge-factor', type=float, default=0.3, help='enlarge factor')
 parser.add_argument('--gpu', type=int, default=0, help='gpu')
+parser.add_argument('--size', type=int, default=224, help='gpu')
 parser.add_argument('--align', action='store_true', help='store_true')
 parser.add_argument('--show', action='store_true', help='store_true')
 args = parser.parse_args()
@@ -29,7 +31,7 @@ dst = np.array([
       [73.5318, 51.5014],
       [56.0252, 71.7366],
       [41.5493, 92.3655],
-      [70.7299, 92.2041]], dtype=np.float32)
+      [70.7299, 92.2041]], dtype=np.float32) / 112. * args.size
 
 trans = transform.SimilarityTransform()
 
@@ -110,9 +112,9 @@ def crop_align_images(items):
 
                     if args.align:
                         trans.estimate(lm, dst)
-                        M = transform.params[0:2, :]
+                        M = trans.params[0:2, :]
 
-                        crop_im = cv2.warpAffine(im, M, (112, 112), borderValue=0)
+                        crop_im = cv2.warpAffine(im, M, (args.size, args.size), borderValue=0)
 
                     else:
                         lm_mean = np.mean(lm, axis=0)
@@ -134,6 +136,7 @@ def crop_align_images(items):
                     if args.show:
                         plt.imshow(cv2.cvtColor(crop_im, cv2.COLOR_BGR2RGB))
                         plt.show()
+                        plt.pause(5)
 
                     cv2.imwrite(out_im, crop_im)
 
@@ -155,4 +158,13 @@ for split in range(1, 11):
 
     crop_align_images(gallery_items)
     crop_align_images(probe_items)
+    crop_align_images(train_items)
+
+proto_dir = os.path.join(args.dir, 'IJB-A_11_sets')
+
+for split in range(1, 11):
+    verify_items = read_csv(os.path.join(proto_dir, 'split%d' % split, 'verify_metadata_%d.csv' % split))
+    train_items = read_csv(os.path.join(proto_dir, 'split%d' % split, 'train_%d.csv' % split))
+
+    crop_align_images(verify_items)
     crop_align_images(train_items)
