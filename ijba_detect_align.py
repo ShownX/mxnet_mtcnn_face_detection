@@ -63,7 +63,9 @@ def crop_align_images(items):
     for item in items:
         template_id, subject_id = item['TEMPLATE_ID'], item['SUBJECT_ID']
         base_d, base_f = os.path.dirname(item['FILE']), os.path.basename(item['FILE'])
+        ext = os.path.splitext(base_f)[1]
         out_im = os.path.join(args.out_dir, base_d, '%d_%s' % (subject_id, base_f))
+        out_lms = os.path.join(args.out_dir, 'mtcnn', '%d_%s' % (subject_id, base_f)).replace(ext, '.txt')
 
         if not os.path.exists(out_im):
             try:
@@ -78,13 +80,13 @@ def crop_align_images(items):
                         and item['NOSE_BASE_X'] and item['NOSE_BASE_Y']:
                     lms = np.array([[float(item['RIGHT_EYE_X']), float(item['RIGHT_EYE_Y'])],
                                     [float(item['LEFT_EYE_X']), float(item['LEFT_EYE_Y'])],
-                                    [float(item['NOSE_BASE_X']), float(item['NOSE_BASE_Y'])]]) - np.array([x, y])
+                                    [float(item['NOSE_BASE_X']), float(item['NOSE_BASE_Y'])]])
                     lm_max = np.max(lms, axis=0)
                     lm_min = np.min(lms, axis=0)
                     delta = lm_max - lm_min
-                    delta[1] = delta[1] * 2
-                    edge = np.mean(delta) * (1 + 0.5)
-                    cx, cy = np.mean(lms[:, 0] + x), np.mean(lms[:, 1] + y)
+                    # delta[1] = delta[1] * 2
+                    edge = max(delta) * 2
+                    cx, cy = np.mean(lms[:, 0]), np.mean(lms[:, 1])
                     # plt.scatter(lms[:, 0], lms[:, 1])
                     # x1, y1, x2, y2 = int(cx - edge), int(cy - edge), int(cx + edge), int(cy + edge)
                     # x1 = max(0, min(x1, im.shape[1]))
@@ -94,7 +96,7 @@ def crop_align_images(items):
 
                 else:
                     cx, cy = int(x + 0.5 * w), int(y + 0.6 * h)
-                    edge = int((w + h) * 1.5 // 4)
+                    edge = int((w + h) // 4)
 
                 x1, y1, x2, y2 = int(cx - edge), int(cy - edge), int(cx + edge), int(cy + edge)
                 x1 = max(0, min(x1, im.shape[1]))
@@ -103,6 +105,10 @@ def crop_align_images(items):
                 y2 = min(im.shape[0], max(y2, 0))
 
                 crop_im = im[y1: y2, x1: x2]
+
+                if args.show:
+                    plt.imshow(crop_im)
+                    plt.show()
 
                 results = detector.detect_face(crop_im)
 
@@ -133,12 +139,16 @@ def crop_align_images(items):
                     if not os.path.exists(os.path.dirname(out_im)):
                         os.makedirs(os.path.dirname(out_im))
 
+                    if not os.path.exists(os.path.dirname(out_lms)):
+                        os.makedirs(os.path.dirname(out_lms))
+
                     if args.show:
                         plt.imshow(cv2.cvtColor(crop_im, cv2.COLOR_BGR2RGB))
                         plt.show()
                         plt.pause(5)
 
                     cv2.imwrite(out_im, crop_im)
+                    np.savetxt(out_lms, lm)
 
             except Exception as e:
                 # logging.warning(e)
