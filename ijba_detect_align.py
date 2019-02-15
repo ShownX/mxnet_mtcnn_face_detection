@@ -97,6 +97,8 @@ def crop_align_images(items):
                 else:
                     cx, cy = int(x + 0.5 * w), int(y + 0.6 * h)
                     edge = int((w + h) // 4)
+                # cx, cy = int(x + 0.5 * w), int(y + 0.6 * h)
+                # edge = int((w + h) // 4)
 
                 x1, y1, x2, y2 = int(cx - edge), int(cy - edge), int(cx + edge), int(cy + edge)
                 x1 = max(0, min(x1, im.shape[1]))
@@ -107,16 +109,22 @@ def crop_align_images(items):
                 crop_im = im[y1: y2, x1: x2]
 
                 if args.show:
-                    plt.imshow(crop_im)
+                    plt.imshow(cv2.cvtColor(crop_im, cv2.COLOR_BGR2RGB))
                     plt.show()
 
                 results = detector.detect_face(crop_im)
 
                 if results is not None:
-                    # box = results[0][0]
-                    lm = results[1][0].reshape([-1, 2]) + np.array([x1, y1])
+                    x, y = results[1][0][:5].reshape((5, 1)), results[1][0][5:].reshape((5, 1))
+                    lm = np.concatenate((x, y), axis=1) + np.array([x1, y1])
 
                     if args.align:
+
+                        if args.show:
+                            plt.imshow(cv2.cvtColor(crop_im, cv2.COLOR_BGR2RGB))
+                            plt.scatter(lm[:, 0] - x1, lm[:, 1] - y1)
+                            plt.show()
+
                         trans.estimate(lm, dst)
                         M = trans.params[0:2, :]
 
@@ -126,7 +134,7 @@ def crop_align_images(items):
                         lm_mean = np.mean(lm, axis=0)
                         lm_min = np.min(lm, axis=0)
                         lm_max = np.max(lm, axis=0)
-                        edge = np.max(lm_max - lm_min) * (1 + 0.3)
+                        edge = np.mean(lm_max - lm_min) * (1 + args.enlarge_factor)
                         x1, y1, x2, y2 = int(lm_mean[0] - edge), int(lm_mean[1] - edge), \
                                          int(lm_mean[0] + edge), int(lm_mean[1] + edge)
 
