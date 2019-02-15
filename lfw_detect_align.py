@@ -1,4 +1,6 @@
-# coding: utf-8
+"""
+LFW/CFP detect and align
+"""
 import mxnet as mx
 from mtcnn_detector import MtcnnDetector
 import cv2
@@ -13,7 +15,7 @@ import matplotlib.pyplot as plt
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('dir', help='uhdb31 dataset that contains the folder images and protocol')
+parser.add_argument('dir', help='lfw dataset that contains the folder images and protocol')
 parser.add_argument('out_dir', help='output dataset')
 parser.add_argument('--sub_dir', default='mtcnn', type=str, help='sub directory')
 parser.add_argument('--enlarge-factor', type=float, default=0.3, help='enlarge factor')
@@ -42,8 +44,8 @@ def crop_align_images(items):
 
     for item in items:
         ext = os.path.splitext(item)[1]
-        out_im = os.path.join(args.out_dir, args.sub_dir, item)
-        out_lm = os.path.join(args.out_dir, 'mtcnn', item.replace(ext, '.txt'))
+        out_im = item.replace(args.dir, os.path.join(args.out_dir, args.sub_dir))
+        out_lm = item.replace(args.dir, os.path.join(args.out_dir, 'mtcnn')).replace(ext, '.txt')
 
         if not os.path.exists(out_im):
             try:
@@ -118,6 +120,8 @@ def crop_align_images(items):
     p_bar.close()
 
 
-filenames = os.listdir(args.dir)
+im_paths = [os.path.join(path, name) for path, subdirs, files in os.walk(args.dir) for name in files
+            if os.path.splitext(name)[1].lower() in ['.jpeg', '.jpg', '.png', '.bmp']]
 
-crop_align_images(filenames)
+crop_align_images(im_paths)
+
