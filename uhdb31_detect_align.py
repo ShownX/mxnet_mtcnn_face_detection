@@ -21,6 +21,7 @@ parser.add_argument('--gpu', type=int, default=0, help='gpu')
 parser.add_argument('--size', type=int, default=224, help='size')
 parser.add_argument('--align', action='store_true', help='store_true')
 parser.add_argument('--show', action='store_true', help='store_true')
+parser.add_argument('--no-crop', action='store_true', help='no crop, just save bounding box and landmarks')
 args = parser.parse_args()
 
 ctx = mx.gpu(args.gpu) if args.gpu >= 0 else mx.cpu()
