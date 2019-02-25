@@ -44,8 +44,8 @@ def crop_align_images(items):
     for item in items:
         ext = os.path.splitext(item)[1]
         out_im = os.path.join(args.out_dir, args.sub_dir, item)
-        out_box = item.replace(args.dir, os.path.join(args.out_dir, 'mtcnn')).replace(ext, '.box')
-        out_lm = item.replace(args.dir, os.path.join(args.out_dir, 'mtcnn')).replace(ext, '.lm')
+        out_box = os.path.join(args.out_dir, 'mtcnn', item).replace(ext, '.box')
+        out_lm = os.path.join(args.out_dir, 'mtcnn', item).replace(ext, '.lm')
         if args.no_crop:
             try:
                 im = cv2.imread(os.path.join(args.dir, item))
@@ -74,7 +74,7 @@ def crop_align_images(items):
                     np.savetxt(out_lm, lm)
 
             except Exception as e:
-                # logging.warning(e)
+                logging.warning(e)
                 continue
         else:
             if not os.path.exists(out_im):
