@@ -28,7 +28,7 @@ args = parser.parse_args()
 
 ctx = mx.gpu(args.gpu) if args.gpu >= 0 else mx.cpu()
 
-detector = MtcnnDetector(model_folder='model', ctx=ctx, num_worker=4, accurate_landmark=False)
+detector = MtcnnDetector(model_folder='model', ctx=ctx, num_worker=4, accurate_landmark=True)
 
 dst = np.array([
       [38.2946, 51.6963],
@@ -155,5 +155,6 @@ def crop_align_images(items):
 im_paths = [os.path.join(path, name) for path, subdirs, files in os.walk(args.dir) for name in files
             if os.path.splitext(name)[1].lower() in ['.jpeg', '.jpg', '.png', '.bmp']]
 
+print('{0} images'.format(len(im_paths)))
 crop_align_images(im_paths)
 

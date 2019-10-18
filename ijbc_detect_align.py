@@ -26,7 +26,7 @@ args = parser.parse_args()
 
 ctx = mx.gpu(args.gpu) if args.gpu >= 0 else mx.cpu()
 
-detector = MtcnnDetector(model_folder='model', ctx=ctx, num_worker=4, accurate_landmark=False)
+detector = MtcnnDetector(model_folder='model', ctx=ctx, num_worker=4, accurate_landmark=True)
 
 dst = np.array([
       [38.2946, 51.6963],
