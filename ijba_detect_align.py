@@ -60,9 +60,8 @@ def read_csv(csv_path):
 
 
 def crop_align_images(items):
-    p_bar = tqdm(total=len(items))
-
-    for item in items:
+    
+    for item in tqdm(items):
         template_id, subject_id = item['TEMPLATE_ID'], item['SUBJECT_ID']
         base_d, base_f = os.path.dirname(item['FILE']), os.path.basename(item['FILE'])
         ext = os.path.splitext(base_f)[1]
@@ -125,6 +124,8 @@ def crop_align_images(items):
 
                         np.savetxt(out_box, box)
                         np.savetxt(out_lm, lm)
+                    else:
+                        missed_detect.append(os.path.join(args.dir, 'images', item['FILE']))
                 except Exception as e:
                     # logging.warning(e)
                     continue
@@ -213,15 +214,13 @@ def crop_align_images(items):
 
                         cv2.imwrite(out_im, crop_im)
                         np.savetxt(out_lm, lm)
+                    else:
+                        missed_detect.append(os.path.join(args.dir, 'images', item['FILE']))
                 except Exception as e:
                     # logging.warning(e)
                     continue
 
-        p_bar.update()
-
-    p_bar.close()
-
-
+missed_detect = []
 proto_dir = os.path.join(args.dir, 'IJB-A_1N_sets')
 
 for split in range(1, 11):
@@ -241,3 +240,7 @@ for split in range(1, 11):
 
     crop_align_images(verify_items)
     crop_align_images(train_items)
+
+
+with open('missed_ijba.txt', 'w') as fout:
+    fout.writelines(missed_detect)
